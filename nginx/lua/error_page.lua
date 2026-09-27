@@ -78,6 +78,7 @@ end
 local code = tonumber(ngx.var.arg_code) or ngx.status or 500
 local title, message = unpack(errors[code] or errors[500])
 local domain = base_domain(ngx.var.host)
+local is_hanasand = domain == "hanasand.com"
 local body = read_file(template_path)
 
 ngx.status = code
@@ -94,6 +95,7 @@ body = body:gsub("{{code}}", tostring(code))
 body = body:gsub("{{title}}", html_escape(title))
 body = body:gsub("{{message}}", html_escape(message))
 body = body:gsub("{{domain}}", html_escape(domain))
+body = body:gsub("{{brand_class}}", is_hanasand and "hanasand-error" or "")
 body = body:gsub("{{home_url}}", js_escape("https://" .. domain))
 body = body:gsub("{{retryable}}", retryable[code] and "true" or "false")
 body = body:gsub("{{request_id}}", html_escape(ngx.var.request_id or "unknown"))
