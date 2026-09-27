@@ -6,18 +6,18 @@
         <title>Request Error</title>
         <style>
             :root {
-                --bg: #07101d;
-                --panel: #101927;
-                --panel-strong: #162238;
-                --panel-soft: #0b1422;
-                --line: rgba(143, 178, 255, 0.22);
-                --line-strong: rgba(143, 178, 255, 0.38);
+                color-scheme: dark;
+                --bg: #070707;
+                --panel: #101010;
+                --panel-strong: #191919;
+                --panel-soft: #0b0b0b;
+                --line: rgba(255, 255, 255, 0.14);
+                --line-strong: rgba(255, 255, 255, 0.24);
                 --text-main: #f5f7fb;
-                --text-muted: #b9c4d6;
-                --text-faint: #7f8da6;
-                --accent: #8fb2ff;
-                --teal: #67d6c5;
-                --grid: rgba(117, 148, 205, 0.46);
+                --text-muted: #999999;
+                --text-faint: #777777;
+                --accent: #8b0000;
+                --grid: rgba(255, 255, 255, 0.10);
             }
 
             * {
@@ -30,7 +30,7 @@
                 min-height: 100vh;
                 background:
                     radial-gradient(circle at center, var(--grid) 1px, transparent 1.5px),
-                    radial-gradient(ellipse 58rem 34rem at 86% -8%, rgba(157, 182, 255, 0.055), transparent 72%),
+                    radial-gradient(ellipse 58rem 34rem at 86% -8%, color-mix(in srgb, var(--text-main) 3%, transparent), transparent 72%),
                     var(--bg);
                 background-size: 30px 30px, auto, auto;
                 color: var(--text-main);
@@ -43,7 +43,7 @@
 
             .container {
                 position: relative;
-                background: linear-gradient(180deg, rgba(22, 34, 56, 0.96), rgba(16, 25, 39, 0.96));
+                background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 94%, var(--text-main)), var(--panel));
                 border: 1px solid var(--line);
                 border-radius: 24px;
                 box-shadow:
@@ -71,7 +71,7 @@
                 border: 1px solid var(--line-strong);
                 border-radius: 18px;
                 background:
-                    linear-gradient(180deg, rgba(143, 178, 255, 0.10), rgba(103, 214, 197, 0.045)),
+                    linear-gradient(180deg, color-mix(in srgb, var(--text-main) 5%, transparent), color-mix(in srgb, var(--accent) 3%, transparent)),
                     var(--panel-soft);
                 box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
             }
@@ -113,7 +113,7 @@
                 width: 7px;
                 height: 7px;
                 border-radius: 50%;
-                background: var(--teal);
+                background: var(--accent);
             }
 
             .status-row {
@@ -125,8 +125,8 @@
 
             h1 {
                 align-items: center;
-                background: rgba(143, 178, 255, 0.08);
-                border: 1px solid rgba(143, 178, 255, 0.28);
+                background: color-mix(in srgb, var(--accent) 8%, transparent);
+                border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
                 border-radius: 19px;
                 color: var(--text-main);
                 display: flex;
@@ -168,8 +168,8 @@
                 justify-content: center;
                 min-width: 122px;
                 padding: 0.78rem 1.04rem;
-                background: rgba(143, 178, 255, 0.14);
-                border-color: rgba(143, 178, 255, 0.28);
+                background: var(--panel-strong);
+                border-color: var(--line);
                 color: var(--text-main);
                 text-decoration: none;
                 transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
@@ -188,8 +188,8 @@
             }
 
             a:hover {
-                background: rgba(143, 178, 255, 0.2);
-                border-color: rgba(143, 178, 255, 0.42);
+                background: var(--panel-strong);
+                border-color: var(--line-strong);
                 transform: translateY(-1px);
             }
 
@@ -227,26 +227,16 @@
             }
 
             .hanasand-error {
-                --bg: #050505;
-                --panel: #0b0b0b;
-                --panel-strong: #151515;
-                --panel-soft: #080808;
-                --line: rgba(255, 255, 255, 0.14);
                 --line-strong: rgba(120, 6, 6, 0.56);
-                --text-main: #f6f6f3;
-                --text-muted: #b0b0b0;
-                --text-faint: #858585;
                 --accent: #780606;
-                --teal: #780606;
-                --grid: rgba(255, 255, 255, 0.10);
                 background:
                     radial-gradient(ellipse 58rem 34rem at 86% -8%, rgba(255, 255, 255, 0.03), transparent 72%),
                     radial-gradient(ellipse 42rem 30rem at 8% 88%, rgba(120, 6, 6, 0.08), transparent 76%),
-                    #050505;
+                    var(--bg);
             }
 
             .hanasand-error .container {
-                background: linear-gradient(180deg, #111111, #080808);
+                background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 94%, var(--text-main)), var(--panel));
             }
 
             .hanasand-error .logo {
@@ -254,7 +244,7 @@
             }
 
             .hanasand-error .logo svg {
-                filter: grayscale(1) sepia(0.6) saturate(2.4) hue-rotate(315deg);
+                filter: none;
             }
 
             .hanasand-error h1 {
@@ -263,7 +253,7 @@
             }
 
             .hanasand-error a {
-                background: rgba(120, 6, 6, 0.14);
+                background: var(--panel-strong);
                 border-color: rgba(120, 6, 6, 0.40);
             }
 
@@ -273,7 +263,7 @@
             }
 
             .hanasand-error a:hover {
-                background: rgba(120, 6, 6, 0.24);
+                background: var(--panel-strong);
                 border-color: rgba(120, 6, 6, 0.62);
             }
 
@@ -306,21 +296,41 @@
                 }
             }
         </style>
+        <script>document.documentElement.classList.toggle('light', document.cookie.split('; ').includes('theme=light'))</script>
+        <style>
+            html.light {
+                color-scheme: light;
+                --bg: #f5f5f5;
+                --panel: #ffffff;
+                --panel-strong: #ededed;
+                --panel-soft: #ffffff;
+                --line: rgba(23, 26, 33, 0.12);
+                --line-strong: rgba(23, 26, 33, 0.22);
+                --text-main: #171a21;
+                --text-muted: #4d4d4d;
+                --text-faint: #666666;
+                --grid: rgba(20, 20, 20, 0.08);
+            }
+
+            html.light body.hanasand-error {
+                --line-strong: rgba(120, 6, 6, 0.40);
+            }
+        </style>
     </head>
     <body class="{{brand_class}}">
         <div class="container">
             <div class="brand">
                 <div class="logo" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-                        <rect width="64" height="64" rx="14" fill="#0e1520"/>
-                        <path d="M8 42c8-5 16-5 24 0s16 5 24 0" fill="none" stroke="#67d6c5" stroke-width="4" stroke-linecap="round"/>
-                        <path d="M15 50h34" stroke="#f5f7fb" stroke-width="4" stroke-linecap="round"/>
-                        <path d="M21 50l7-18h8l7 18" fill="none" stroke="#d7e5ff" stroke-width="4" stroke-linejoin="round"/>
-                        <path d="M25 32l7-7 7 7" fill="none" stroke="#f0b35a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M43 19v31" stroke="#d7e5ff" stroke-width="4" stroke-linecap="round"/>
-                        <path d="M43 20a13 13 0 0 1 13 13" fill="none" stroke="#8fb2ff" stroke-width="3" stroke-linecap="round"/>
-                        <path d="M43 27a6 6 0 0 1 6 6" fill="none" stroke="#8fb2ff" stroke-width="3" stroke-linecap="round"/>
-                        <circle cx="43" cy="20" r="3" fill="#e35f2b"/>
+                        <rect width="64" height="64" rx="14" fill="var(--panel-soft)"/>
+                        <path d="M8 42c8-5 16-5 24 0s16 5 24 0" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/>
+                        <path d="M15 50h34" stroke="var(--text-main)" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M21 50l7-18h8l7 18" fill="none" stroke="var(--text-main)" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M25 32l7-7 7 7" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M43 19v31" stroke="var(--text-main)" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M43 20a13 13 0 0 1 13 13" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M43 27a6 6 0 0 1 6 6" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="43" cy="20" r="3" fill="var(--accent)"/>
                     </svg>
                 </div>
                 <div class="brand-copy">

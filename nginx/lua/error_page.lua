@@ -86,7 +86,30 @@ ngx.header.content_type = "text/html; charset=utf-8"
 ngx.header["X-Request-ID"] = ngx.var.request_id or "unknown"
 
 if not body then
-    ngx.say(code .. " - " .. title)
+    local is_light = false
+    for cookie in (ngx.var.http_cookie or ""):gmatch("[^;]+") do
+        if cookie:match("^%s*theme=light%s*$") then
+            is_light = true
+            break
+        end
+    end
+    local canvas = is_light and "#f5f5f5" or "#070707"
+    local panel = is_light and "#ffffff" or "#101010"
+    local text = is_light and "#171a21" or "#f5f7fb"
+    local muted = is_light and "#4d4d4d" or "#999999"
+    ngx.say(string.format(
+        "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta name=\"color-scheme\" content=\"%s\"><title>%s</title><style>html,body{min-height:100%%}body{box-sizing:border-box;margin:0;padding:2rem;display:grid;place-items:center;background:%s;color:%s;font:16px system-ui,sans-serif}.card{max-width:36rem;padding:2rem;border:1px solid color-mix(in srgb,%s 14%%,transparent);border-radius:1rem;background:%s}p{color:%s;line-height:1.6}a{color:inherit}</style></head><body><main class=\"card\"><h1>%s</h1><p>%s</p><a href=\"https://%s\">Go home</a></main></body></html>",
+        is_light and "light" or "dark",
+        html_escape(tostring(code) .. " - " .. title),
+        canvas,
+        text,
+        text,
+        panel,
+        muted,
+        html_escape(tostring(code) .. " - " .. title),
+        html_escape(message:gsub("{{domain}}", domain)),
+        html_escape(domain)
+    ))
     return
 end
 
