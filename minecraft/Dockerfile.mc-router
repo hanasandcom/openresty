@@ -1,0 +1,4 @@
+FROM busybox:1.36.1-musl AS healthcheck
+
+FROM itzg/mc-router:1.47.1@sha256:177433dd91507339924d60205a19ae9a289afd0e69dbad54e1a55d497f7523f8
+COPY --from=healthcheck /bin/busybox /bin/busybox
