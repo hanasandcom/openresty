@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="{{theme_class}}">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -76,9 +76,10 @@
                 box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
             }
 
-            .logo svg {
-                width: 58px;
-                height: 58px;
+            .logo img {
+                width: 68px;
+                height: 68px;
+                object-fit: contain;
             }
 
             .brand-copy {
@@ -296,7 +297,6 @@
                 }
             }
         </style>
-        <script>document.documentElement.classList.toggle('light', document.cookie.split('; ').includes('theme=light'))</script>
         <style>
             html.light {
                 color-scheme: light;
@@ -321,17 +321,7 @@
         <div class="container">
             <div class="brand">
                 <div class="logo" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-                        <rect width="64" height="64" rx="14" fill="var(--panel-soft)"/>
-                        <path d="M8 42c8-5 16-5 24 0s16 5 24 0" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/>
-                        <path d="M15 50h34" stroke="var(--text-main)" stroke-width="4" stroke-linecap="round"/>
-                        <path d="M21 50l7-18h8l7 18" fill="none" stroke="var(--text-main)" stroke-width="4" stroke-linejoin="round"/>
-                        <path d="M25 32l7-7 7 7" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M43 19v31" stroke="var(--text-main)" stroke-width="4" stroke-linecap="round"/>
-                        <path d="M43 20a13 13 0 0 1 13 13" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
-                        <path d="M43 27a6 6 0 0 1 6 6" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
-                        <circle cx="43" cy="20" r="3" fill="var(--accent)"/>
-                    </svg>
+                    <img src="{{logo_path}}" alt="">
                 </div>
                 <div class="brand-copy">
                     <div class="brand-name">Hanasand</div>
