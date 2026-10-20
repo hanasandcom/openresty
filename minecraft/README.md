@@ -5,13 +5,14 @@ Players use `name-pending.hanasand.com`, `67.hanasand.com`, or
 explicit `:443` also works. `np.hanasand.com` is an additional alias for Name Pending. These are Java Edition server addresses, not URLs.
 Each modded server still requires its own matching client version and mods.
 
-OpenResty's stream listener owns IPv4/IPv6 port 443. NetherNet HTTP signaling
-for np.hanasand.com goes through loopback 8444; TLS goes to the existing
-HTTP virtual hosts on `127.0.0.1:8443`; other connections go to mc-router on
-`127.0.0.1:25566`. PROXY protocol preserves the original IP for HTTPS and router
-logs. mc-router routes only the configured hostnames across the existing
-Docker networks. It needs no Docker socket or administrative API. Minecraft
-backends retain their own authentication; their socket peer is the router.
+OpenResty's stream listener owns IPv4/IPv6 port 443. SSH greetings go to the VM
+gateway on port 22. NetherNet HTTP signaling for np.hanasand.com goes through loopback
+8444; TLS goes to the existing HTTP virtual hosts on `127.0.0.1:8443`; other
+connections go to mc-router on `127.0.0.1:25566`. PROXY protocol preserves the
+original IP for HTTPS and router logs. mc-router routes only the configured
+hostnames across the existing Docker networks. It needs no Docker socket or
+administrative API. Minecraft backends retain their own authentication; their
+socket peer is the router.
 
 ## Tracked configuration
 
