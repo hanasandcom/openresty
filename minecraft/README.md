@@ -6,7 +6,9 @@ explicit `:443` also works. `np.hanasand.com` is an additional alias for Name Pe
 Each modded server still requires its own matching client version and mods.
 
 OpenResty's stream listener owns IPv4/IPv6 port 443. SSH greetings go to the VM
-gateway on port 22. NetherNet HTTP signaling for np.hanasand.com goes through loopback
+gateway on port 22. TLS SNI routes created from VM details pass through to guest
+ports. Minecraft Java routes are read from the watched mc-router routes file.
+NetherNet HTTP signaling for np.hanasand.com goes through loopback
 8444; TLS goes to the existing HTTP virtual hosts on `127.0.0.1:8443`; other
 connections go to mc-router on `127.0.0.1:25566`. PROXY protocol preserves the
 original IP for HTTPS and router logs. mc-router routes only the configured
@@ -47,12 +49,18 @@ status before changing the shared listener.
 From `/home/hanasand/openresty`:
 
 ```sh
+mkdir -p minecraft/runtime
+cp minecraft/routes-seed.json minecraft/runtime/minecraft.json
 docker compose -p minecraft-routing -f minecraft/docker-compose.yml up -d
 docker exec openresty nginx -t
 docker exec openresty nginx -s reload
 python3 minecraft/check_routes.py --connect 127.0.0.1 --forge
 python3 minecraft/setup_dns.py --apply
 ```
+
+Set `VM_PORT_ROUTES_API_URL` and `VM_PORT_ROUTE_TOKEN` in the private OpenResty
+`.env`. Set the same route token in the Hanasand API environment. The route list is
+read from the API on `127.0.0.1:8080` every five seconds.
 
 `setup_dns.py` defaults to a dry run. It reads the existing Domeneshop Certbot
 credentials from `letsencrypt/domeneshop.ini`, updates only the four A and four

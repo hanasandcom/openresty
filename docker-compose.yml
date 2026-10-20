@@ -4,6 +4,9 @@ services:
     build: .
     restart: unless-stopped
     network_mode: host
+    environment:
+      VM_PORT_ROUTES_API_URL: ${VM_PORT_ROUTES_API_URL:-http://127.0.0.1:8080/api/vms/internal/public-ports}
+      VM_PORT_ROUTE_TOKEN: ${VM_PORT_ROUTE_TOKEN:-}
     logging:
       driver: json-file
       options:
@@ -11,10 +14,12 @@ services:
         max-file: "3"
     volumes:
       - ./nginx/conf/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
+      - ./minecraft/routes-seed.json:/usr/local/openresty/nginx/conf/minecraft-routes-seed.json:ro
       - ./nginx/conf.d:/usr/local/openresty/nginx/conf.d:ro
       - ./nginx/snippets:/usr/local/openresty/nginx/conf/snippets:ro
       - ./nginx/errors:/usr/local/openresty/nginx/errors:ro
       - ./nginx/lua:/usr/local/openresty/nginx/lua:ro
+      - ./minecraft/runtime:/var/run/vm-routes:rw
       - ./letsencrypt:/etc/letsencrypt
       - ./certbot-credentials:/etc/certbot-credentials:ro
       - ./scripts:/usr/local/openresty/certbot-scripts:ro

@@ -11,11 +11,10 @@ services:
     environment:
       RECEIVE_PROXY_PROTOCOL: "true"
       CONNECTION_RATE_LIMIT: "20"
-      MAPPING: |
-        name-pending.hanasand.com=name_pending_server:25565
-        np.hanasand.com=name_pending_server:25565
-        67.hanasand.com=create-server:25565
-        cobbleverse.hanasand.com=cobbleverse:25565
+      ROUTES_CONFIG: /var/run/vm-routes/minecraft.json
+      ROUTES_CONFIG_WATCH: "true"
+    volumes:
+      - ./runtime:/var/run/vm-routes:ro
     networks:
       - name-pending
       - create

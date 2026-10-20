@@ -1,0 +1,8 @@
+{
+  "mappings": {
+    "name-pending.hanasand.com": "name_pending_server:25565",
+    "np.hanasand.com": "name_pending_server:25565",
+    "67.hanasand.com": "create-server:25565",
+    "cobbleverse.hanasand.com": "cobbleverse:25565"
+  }
+}
