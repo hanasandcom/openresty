@@ -91,10 +91,8 @@ local title, message = unpack(errors[code] or {
     "The request could not be completed by this server."
 })
 local domain = base_domain(ngx.var.host)
-local is_hanasand = domain == "hanasand.com"
 local is_light = request_uses_light_theme()
 local theme_class = is_light and "light" or "dark"
-local logo_path = is_light and "/errors/hanasand_dark.png" or "/errors/hanasand_light.png"
 local body = read_file(template_path)
 
 ngx.status = code
@@ -108,7 +106,7 @@ if not body then
     local muted = is_light and "#4d4d4d" or "#999999"
     local scheme = is_light and "light" or "dark"
     ngx.say(string.format(
-        "<!doctype html><html lang=\"en\" class=\"%s\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta name=\"color-scheme\" content=\"%s\"><title>%s</title><style>html,body{min-height:100%%}body{box-sizing:border-box;margin:0;padding:2rem;display:grid;place-items:center;background:%s;color:%s;font:16px system-ui,sans-serif}.card{max-width:36rem;padding:2rem;border:1px solid color-mix(in srgb,%s 14%%,transparent);border-radius:1rem;background:%s}.brand{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem}.brand img{width:4rem;height:4rem;object-fit:contain}p{color:%s;line-height:1.6}a{color:inherit}</style></head><body><main class=\"card\"><div class=\"brand\"><img src=\"%s\" alt=\"\"><strong>Hanasand</strong></div><h1>%s</h1><p>%s</p><a href=\"https://%s\">Go home</a></main></body></html>",
+        "<!doctype html><html lang=\"en\" class=\"%s\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta name=\"color-scheme\" content=\"%s\"><title>%s</title><style>html,body{min-height:100%%}body{box-sizing:border-box;margin:0;padding:2rem;display:grid;place-items:center;background:%s;color:%s;font:16px system-ui,sans-serif}.card{max-width:36rem;padding:2rem;border:1px solid color-mix(in srgb,%s 14%%,transparent);border-radius:1rem;background:%s}p{color:%s;line-height:1.6}a{color:inherit}</style></head><body><main class=\"card\"><h1>%s</h1><p>%s</p><a href=\"https://%s\">Go home</a></main></body></html>",
         scheme,
         scheme,
         html_escape(tostring(code) .. " - " .. title),
@@ -117,7 +115,6 @@ if not body then
         text,
         panel,
         muted,
-        logo_path,
         html_escape(tostring(code) .. " - " .. title),
         html_escape(message:gsub("{{domain}}", domain)),
         html_escape(domain)
@@ -130,9 +127,7 @@ body = body:gsub("{{code}}", tostring(code))
 body = body:gsub("{{title}}", html_escape(title))
 body = body:gsub("{{message}}", html_escape(message))
 body = body:gsub("{{domain}}", html_escape(domain))
-body = body:gsub("{{brand_class}}", is_hanasand and "hanasand-error" or "")
 body = body:gsub("{{theme_class}}", theme_class)
-body = body:gsub("{{logo_path}}", logo_path)
 body = body:gsub("{{home_url}}", js_escape("https://" .. domain))
 body = body:gsub("{{retryable}}", retryable[code] and "true" or "false")
 body = body:gsub("{{request_id}}", html_escape(ngx.var.request_id or "unknown"))
