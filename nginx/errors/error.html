@@ -55,30 +55,6 @@
                 overflow: hidden;
             }
 
-            .eyebrow {
-                display: inline-flex;
-                align-items: center;
-                gap: 7px;
-                margin-bottom: 26px;
-                border: 1px solid var(--line);
-                border-radius: 999px;
-                background: var(--panel-soft);
-                color: #b8b5ae;
-                font-size: 0.72rem;
-                font-weight: 650;
-                letter-spacing: 0.18em;
-                padding: 8px 12px;
-                text-transform: uppercase;
-            }
-
-            .eyebrow::before {
-                content: "";
-                width: 7px;
-                height: 7px;
-                border-radius: 50%;
-                background: var(--accent);
-            }
-
             .status-row {
                 display: grid;
                 grid-template-columns: 92px 1fr;
@@ -208,7 +184,6 @@
     </head>
     <body>
         <div class="container">
-            <div class="eyebrow">Hanasand System Notice</div>
             <div class="status-row">
                 <h1 id="status-code">500</h1>
                 <div>
