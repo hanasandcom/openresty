@@ -309,7 +309,7 @@
                 <div>
                     <h2 id="status-title">Internal Server Error</h2>
                     <p id="status-message">The site could not be reached. Please try again.</p>
-                    <p id="retry-message"></p>
+                    <p id="retry-message" role="timer" aria-label="Automatic retry countdown"></p>
                     <p id="request-id" class="request-id">Request ID: <span></span></p>
                     <div class="actions">
                         <a id="retry-link" href="#">Try Again</a>
@@ -383,8 +383,20 @@
 
             if (retryable && retries < maxRetries) {
                 const delaySeconds = retryBaseSeconds * Math.pow(2, retries);
-                retryMessage.textContent = `Retrying in ${delaySeconds}s. Attempt ${retries + 1} of ${maxRetries}.`;
-                window.setTimeout(() => window.location.assign(retryLink.href), delaySeconds * 1000);
+                const retryAt = Date.now() + delaySeconds * 1000;
+                let retryStarted = false;
+                const updateCountdown = () => {
+                    const remaining = Math.max(0, Math.ceil((retryAt - Date.now()) / 1000));
+                    retryMessage.textContent = `Retrying in ${remaining}s. Attempt ${retries + 1} of ${maxRetries}.`;
+                    if (remaining === 0 && !retryStarted) {
+                        retryStarted = true;
+                        window.clearInterval(countdown);
+                        window.location.assign(retryLink.href);
+                    }
+                };
+                const countdown = window.setInterval(updateCountdown, 250);
+                document.addEventListener('visibilitychange', updateCountdown);
+                updateCountdown();
             } else if (retryable) {
                 retryMessage.textContent = 'Automatic retries stopped. Try again later.';
             } else {
