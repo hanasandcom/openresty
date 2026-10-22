@@ -8,11 +8,13 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:25566:25565"
+      - "127.0.0.1:25567:25567"
     environment:
       RECEIVE_PROXY_PROTOCOL: "true"
       CONNECTION_RATE_LIMIT: "20"
       ROUTES_CONFIG: /var/run/vm-routes/minecraft.json
       ROUTES_CONFIG_WATCH: "true"
+      API_BINDING: "0.0.0.0:25567"
     volumes:
       - ./runtime:/var/run/vm-routes:ro
     networks:
