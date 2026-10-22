@@ -4,7 +4,7 @@ Dockerized OpenResty reverse proxy for `hanasand.com` and related services.
 
 `identity.hanasand.com` routes `/api/*` and `/ready` directly to the Identity workers (`hanasand_auth`). Browser sign-in uses this host and does not go through the Hanasand application API.
 
-The Browser UI runs inside Hanasand's standard app shell at `/sandbox`. Browser data, streams, and WebSockets route directly to the separate Browser API at `127.0.0.1:8185`; sign-in calls Identity directly at `identity.hanasand.com`, and Browser records stay in the Browser-owned database. Browser page requests to `browsers.hanasand.com` redirect to the same UI under `hanasand.com/sandbox`.
+The Browser UI runs inside Hanasand's standard app shell at `/sandbox`. OpenResty leaves that exact route on the Hanasand frontend and sends `/sandbox/ui` plus Browser page assets and child routes directly to the Browser web service at `127.0.0.1:8186`. Browser data, streams, and WebSockets route directly to the separate Browser API at `127.0.0.1:8185`; sign-in calls Identity directly at `identity.hanasand.com`, and Browser records stay in the Browser-owned database. Requests to `browsers.hanasand.com` redirect to the standard `/sandbox` path; its legacy `/login` path redirects to the shared Hanasand login.
 
 Shared HTTP error responses use the template in `nginx/errors/` and its Lua renderer in `nginx/lua/`.
 
