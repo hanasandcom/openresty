@@ -4,6 +4,8 @@ Dockerized OpenResty reverse proxy for `hanasand.com` and related services.
 
 `identity.hanasand.com` routes `/api/*` and `/ready` directly to the Identity workers (`hanasand_auth`). Browser sign-in uses this host and does not go through the Hanasand application API.
 
+`browsers.hanasand.com` serves the Browser UI, with `/api/*` and `/ready` routed to the Browser API. Requests to `hanasand.com/sandbox` redirect to the Browser app while preserving the path and query.
+
 Shared HTTP error responses use the template in `nginx/errors/` and its Lua renderer in `nginx/lua/`.
 
 The service uses host networking so the existing upstreams such as `localhost:3000`, `localhost:8080`, and `localhost:8501` keep the same meaning they had in the host-level OpenResty service. Its shared port 443 listener routes TLS to web sites or named VM services, `SSH-` greetings to the VM SSH gateway, HTTP signaling to Name Pending, and remaining game traffic to mc-router. Minecraft service routes are refreshed through mc-router's watched config. The internal SSH relay consumes the PROXY header before forwarding the SSH stream to the gateway on port 22.
