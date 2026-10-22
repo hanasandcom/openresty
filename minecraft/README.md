@@ -6,15 +6,24 @@ explicit `:443` also works. `np.hanasand.com` is an additional alias for Name Pe
 Each modded server still requires its own matching client version and mods.
 
 OpenResty's stream listener owns IPv4/IPv6 port 443. SSH greetings go to the VM
-gateway on port 22. TLS SNI routes created from VM details pass through to guest
-ports. Minecraft Java routes are read from the watched mc-router routes file.
-NetherNet HTTP signaling for np.hanasand.com goes through loopback
-8444; TLS goes to the existing HTTP virtual hosts on `127.0.0.1:8443`; other
-connections go to mc-router on `127.0.0.1:25566`. PROXY protocol preserves the
-original IP for HTTPS and router logs. mc-router routes only the configured
-hostnames across the existing Docker networks. It needs no Docker socket or
-administrative API. Minecraft backends retain their own authentication; their
-socket peer is the router.
+gateway on port 22. TLS SNI routes pass through to the matching guest port.
+Minecraft Java handshakes identify the VM and guest port; OpenResty registers
+that exact hostname with mc-router's loopback-only route API. The watched
+`minecraft/runtime/minecraft.json` file contains only the fixed first-party seed
+routes. NetherNet HTTP signaling for np.hanasand.com goes through loopback
+8444; TLS for first-party sites goes to `127.0.0.1:8443`; other game traffic
+goes to mc-router on `127.0.0.1:25566`. PROXY protocol preserves the original IP
+for the router. mc-router retains its existing server networks and does not
+mount the Docker socket. Customer VMs do not join those Docker networks and
+receive traffic only at the selected guest IP and port.
+
+VM route records contain a VM hostname and private IP, not a service name or
+guest port. Minecraft clients use `<vm-name>.hanasand.com:443` for guest port
+25565, or `<port>-<vm-name>.hanasand.com:443` for another guest port. The server
+process and any local proxy remain configured inside the VM. TLS services must
+provide their own certificate and send SNI. HTTP uses the public port 80 and
+routes to guest port 80 by default; a numeric hostname prefix selects another
+guest HTTP port.
 
 ## Tracked configuration
 
@@ -59,8 +68,10 @@ python3 minecraft/setup_dns.py --apply
 ```
 
 Set `VM_PORT_ROUTES_API_URL` and `VM_PORT_ROUTE_TOKEN` in the private OpenResty
-`.env`. Set the same route token in the Hanasand API environment. The route list is
-read from the API on `127.0.0.1:8080` every five seconds.
+`.env`. Set the same route token in the Hanasand API environment. The VM identity
+list is read from the API on `127.0.0.1:8080` every five seconds. The mc-router
+route API is exposed only on host loopback port `25567` for OpenResty to register
+the Minecraft hostname after it reads the handshake.
 
 `setup_dns.py` defaults to a dry run. It reads the existing Domeneshop Certbot
 credentials from `letsencrypt/domeneshop.ini`, updates only the four A and four

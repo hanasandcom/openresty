@@ -8,16 +8,16 @@ Dockerized OpenResty reverse proxy for `hanasand.com` and related services.
 
 Shared HTTP error responses use the template in `nginx/errors/` and its Lua renderer in `nginx/lua/`.
 
-The service uses host networking so the existing upstreams such as `localhost:3000`, `localhost:8080`, and `localhost:8501` keep the same meaning they had in the host-level OpenResty service. Its shared port 443 listener routes TLS to web sites, named VM services, or `turn.hanasand.com` (TURN over TLS via the local HAProxy bridge), `SSH-` greetings to the VM SSH gateway, HTTP signaling to Name Pending, and remaining game traffic to mc-router. Minecraft service routes are refreshed through mc-router's watched config. The internal SSH relay consumes the PROXY header before forwarding the SSH stream to the gateway on port 22.
+The service uses host networking so the existing upstreams such as `localhost:3000`, `localhost:8080`, and `localhost:8501` keep the same meaning they had in the host-level OpenResty service. Its shared port 443 listener routes TLS by SNI, `SSH-` greetings to the VM SSH gateway, HTTP signaling to Name Pending, and Minecraft Java by the hostname in its handshake. VM services route to the selected guest port on the VM's private address. The VM route feed contains VM identities and private addresses only; OpenResty does not mount or write the Minecraft router's watched route file. The internal SSH relay consumes the PROXY header before forwarding the SSH stream to the gateway on port 22.
 
-VM service routes are created in Hanasand's VM details page. HTTP website routes
-terminate TLS at this gateway with the Hanasand wildcard certificate and proxy
-HTTP to the guest port. TLS routes pass through end to end, and Minecraft Java
-routes use the hostname in the game handshake. Set the same private
-`VM_PORT_ROUTE_TOKEN` in the Hanasand API and this repository's `.env`; the gateway
-uses it to read the route list from `127.0.0.1:8080` every five seconds. The wildcard
-DNS record sends `port-*.hanasand.com` to this host. TLS services must send SNI and
-keep their own certificate. Plain TCP and UDP services need another routing method.
+VM names provide their public hostname (`<vm-name>.hanasand.com`). HTTP Host,
+TLS SNI and Minecraft Java handshakes identify the VM; a numeric leading label
+such as `8080-test3.hanasand.com` selects guest port 8080. The guest process,
+certificate and any local reverse-proxy configuration stay inside that VM. Set
+the same private `VM_PORT_ROUTE_TOKEN` in the Hanasand API and this repository's
+`.env`; the gateway reads the VM-only route list from `127.0.0.1:8080` every five
+seconds. TLS passes through to the guest, which provides its own certificate.
+Arbitrary plain TCP and UDP services cannot be selected by hostname alone.
 
 ## Deploy
 
