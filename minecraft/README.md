@@ -17,13 +17,13 @@ for the router. mc-router retains its existing server networks and does not
 mount the Docker socket. Customer VMs do not join those Docker networks and
 receive traffic only at the selected guest IP and port.
 
-VM route records contain a VM hostname and private IP, not a service name or
-guest port. Minecraft clients use `<vm-name>.hanasand.com:443` for guest port
-25565, or `<port>-<vm-name>.hanasand.com:443` for another guest port. The server
-process and any local proxy remain configured inside the VM. TLS services must
-provide their own certificate and send SNI. HTTP uses the public port 80 and
-routes to guest port 80 by default; a numeric hostname prefix selects another
-guest HTTP port.
+The route feed contains VM identity routes and named service routes. A service
+entry has a hostname, route type, private VM IP and guest port. Minecraft Java
+routes are registered with mc-router using the hostname in the game handshake;
+players connect to `<service-name>.hanasand.com:443`. Existing
+`<port>-<vm-name>.hanasand.com` numeric aliases remain available. TLS services
+must provide their own certificate and send SNI. Website services terminate
+wildcard HTTPS at the gateway and proxy HTTP to the configured guest port.
 
 ## Tracked configuration
 

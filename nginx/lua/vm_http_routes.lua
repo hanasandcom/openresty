@@ -1,6 +1,7 @@
 local http = require "resty.http"
 local json = require "cjson.safe"
 local targets = ngx.shared.vm_http_routes
+local resolver = require "vm_route_resolver"
 local apiUrl = os.getenv("VM_PORT_ROUTES_API_URL") or "http://127.0.0.1:8080/api/vms/internal/public-ports"
 local syncToken = os.getenv("VM_PORT_ROUTE_TOKEN") or ""
 
@@ -21,13 +22,46 @@ local function refresh(premature)
     end
 
     local nextTargets = {}
+    local vmNames = {}
     for _, route in ipairs(routes) do
         local vmName = type(route.vmName) == "string" and route.vmName:lower() or ""
         local hostname = type(route.hostname) == "string" and route.hostname:lower() or ""
+        if not route.type and vmName:match("^[a-z0-9][a-z0-9%-]*$") and hostname == vmName .. ".hanasand.com" then
+            vmNames[vmName] = true
+        end
+    end
+    for _, route in ipairs(routes) do
+        if type(route) ~= "table" then
+            ngx.log(ngx.WARN, "VM route refresh contained a non-object route; retaining last good HTTP map")
+            return
+        end
+        local vmName = type(route.vmName) == "string" and route.vmName:lower() or ""
+        local hostname = type(route.hostname) == "string" and route.hostname:lower() or ""
         local ip = type(route.vmIp) == "string" and route.vmIp or ""
-        if vmName:match("^[a-z0-9][a-z0-9%-]*$") and hostname == vmName .. ".hanasand.com"
-            and require("vm_route_resolver").resolve(hostname, 80, { get = function(_, key) return key == vmName and ip or nil end }) then
+        if not route.type then
+            if not vmName:match("^[a-z0-9][a-z0-9%-]*$") or hostname ~= vmName .. ".hanasand.com" or not resolver.validIp(ip) then
+                ngx.log(ngx.WARN, "VM route refresh contained an invalid VM route; retaining last good HTTP map")
+                return
+            end
             nextTargets[vmName] = ip
+        elseif route.type == "http" or route.type == "tls" or route.type == "minecraft-java" then
+            local serviceName = type(route.name) == "string" and route.name:lower() or ""
+            local key = resolver.serviceKey(hostname, route.type)
+            local port = tonumber(route.port)
+            if not key or hostname ~= serviceName .. ".hanasand.com" or vmNames[serviceName]
+                or not resolver.validServiceName(serviceName) or not vmName:match("^[a-z0-9][a-z0-9%-]*$")
+                or not resolver.validIp(ip) or not resolver.validPort(port) then
+                ngx.log(ngx.WARN, "VM route refresh contained an invalid service route; retaining last good HTTP map")
+                return
+            end
+            if route.type == "http" then
+                local backend = ip .. ":" .. math.floor(port)
+                nextTargets[key] = backend
+                nextTargets[hostname] = "http://" .. backend
+            end
+        else
+            ngx.log(ngx.WARN, "VM route refresh contained an unknown route type; retaining last good HTTP map")
+            return
         end
     end
 

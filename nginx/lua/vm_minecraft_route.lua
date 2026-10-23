@@ -48,7 +48,7 @@ local M = {}
 function M.registerHandshakeRoute()
     local hostname, err = readMinecraftHostname()
     if not hostname then return nil, err end
-    local backend = routeSync.resolve(hostname, 25565)
+    local backend = routeSync.resolve(hostname, 25565, "minecraft-java")
     if not backend then return false end
     local ok, routeErr = routeSync.updateMcRoute(hostname, backend)
     if not ok then return nil, routeErr end

@@ -73,7 +73,7 @@ local function reconcileMcRoutes()
     for hostname, route in pairs(routes) do
         local host = type(hostname) == "string" and hostname:lower() or ""
         if resolver.isVmHostname(host) and not staticMinecraft[host] then
-            local expected = resolver.resolve(host, 25565, targets)
+            local expected = resolver.resolve(host, 25565, targets, "minecraft-java")
             local backend = type(route) == "table" and route.backend or nil
             if not expected then
                 removeMcRoute(host)
@@ -107,13 +107,42 @@ local function refresh(premature)
     end
 
     local nextTargets = {}
+    local vmNames = {}
     for _, route in ipairs(routes) do
         local vmName = type(route.vmName) == "string" and route.vmName:lower() or ""
         local hostname = type(route.hostname) == "string" and route.hostname:lower() or ""
+        if not route.type and vmName:match("^[a-z0-9][a-z0-9%-]*$") and hostname == vmName .. ".hanasand.com" then
+            vmNames[vmName] = true
+        end
+    end
+    for _, route in ipairs(routes) do
+        if type(route) ~= "table" then
+            ngx.log(ngx.WARN, "VM route refresh contained a non-object route; retaining last good map")
+            return
+        end
+        local vmName = type(route.vmName) == "string" and route.vmName:lower() or ""
+        local hostname = type(route.hostname) == "string" and route.hostname:lower() or ""
         local ip = type(route.vmIp) == "string" and route.vmIp or ""
-        if vmName:match("^[a-z0-9][a-z0-9%-]*$") and hostname == vmName .. ".hanasand.com"
-            and resolver.resolve(hostname, 25565, { get = function(_, key) return key == vmName and ip or nil end }) then
+        if not route.type then
+            if not vmName:match("^[a-z0-9][a-z0-9%-]*$") or hostname ~= vmName .. ".hanasand.com" or not resolver.validIp(ip) then
+                ngx.log(ngx.WARN, "VM route refresh contained an invalid VM route; retaining last good map")
+                return
+            end
             nextTargets[vmName] = ip
+        elseif route.type == "tls" or route.type == "minecraft-java" or route.type == "http" then
+            local serviceName = type(route.name) == "string" and route.name:lower() or ""
+            local key = resolver.serviceKey(hostname, route.type)
+            local port = tonumber(route.port)
+            if not key or hostname ~= serviceName .. ".hanasand.com" or vmNames[serviceName]
+                or not resolver.validServiceName(serviceName) or not vmName:match("^[a-z0-9][a-z0-9%-]*$")
+                or not resolver.validIp(ip) or not resolver.validPort(port) or route.hostname ~= hostname then
+                ngx.log(ngx.WARN, "VM route refresh contained an invalid service route; retaining last good map")
+                return
+            end
+            nextTargets[key] = ip .. ":" .. math.floor(port)
+        else
+            ngx.log(ngx.WARN, "VM route refresh contained an unknown route type; retaining last good map")
+            return
         end
     end
 
@@ -132,8 +161,8 @@ if ngx.worker.id() == 0 then
 end
 
 return {
-    resolve = function(hostname, defaultPort)
-        return resolver.resolve(hostname, defaultPort, targets)
+    resolve = function(hostname, defaultPort, routeType)
+        return resolver.resolve(hostname, defaultPort, targets, routeType)
     end,
     updateMcRoute = updateMcRoute,
 }
