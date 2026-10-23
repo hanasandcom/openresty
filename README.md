@@ -45,3 +45,22 @@ curl -fsS https://identity.hanasand.com/ready
 ```
 
 TLS certificates are read from `/etc/letsencrypt` on the host.
+
+Requests sent directly to `128.39.142.218` redirect to the canonical Hanasand URL
+while preserving the path and query. HTTPS uses a separate Let's Encrypt IP
+certificate because the domain certificate does not identify the numeric address.
+IP certificates use the `shortlived` profile and expire after six days. Certbot
+must renew them automatically; the Inspur renewal job runs twice daily and reloads
+OpenResty after a successful renewal. The HTTP-01 challenge path remains available
+on port 80 for renewal.
+
+To issue or replace the IP certificate from the OpenResty container, use:
+
+```sh
+docker exec openresty certbot certonly --preferred-profile shortlived \
+  --webroot --webroot-path /etc/letsencrypt \
+  --ip-address 128.39.142.218
+```
+
+The renewal configuration created by Certbot is picked up by
+`renew-hanasand-certbot.sh`; verify that the scheduled renewal job remains enabled.
