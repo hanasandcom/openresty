@@ -24,9 +24,12 @@ local function readStringVarInt(data, position)
     return nil, nil
 end
 
-local function readMinecraftHostname()
-    local sock, socketErr = ngx.req.socket()
-    if not sock then return nil, socketErr end
+local function readMinecraftHostname(sock)
+	if not sock then
+		local socketErr
+		sock, socketErr = ngx.req.socket()
+		if not sock then return nil, socketErr end
+	end
     local packetLength, afterLength, lengthErr = readSocketVarInt(sock, 1)
     if not packetLength then return nil, lengthErr end
     if packetLength < 1 or packetLength > 4096 then return nil, "invalid handshake length" end
@@ -45,8 +48,8 @@ local function readMinecraftHostname()
 end
 
 local M = {}
-function M.registerHandshakeRoute()
-    local hostname, err = readMinecraftHostname()
+function M.registerHandshakeRoute(sock)
+	local hostname, err = readMinecraftHostname(sock)
     if not hostname then return nil, err end
     local backend = routeSync.resolve(hostname, 25565, "minecraft-java")
     if not backend then return false end
