@@ -18,9 +18,13 @@ mount the Docker socket. Customer VMs do not join those Docker networks and
 receive traffic only at the selected guest IP and port.
 
 The route feed contains VM identity routes and named service routes. A service
-entry has a hostname, route type, private VM IP and guest port. Minecraft Java
-routes are registered with mc-router using the hostname in the game handshake;
-players connect to `<service-name>.hanasand.com:443`. Existing
+entry has a hostname, route type, private VM IP and guest port. When a VM
+publishes Minecraft Java on guest port 25565, the gateway also registers
+`<vm-name>.hanasand.com` to that VM's port 25565. Published Minecraft service
+hostnames use their configured guest ports. The gateway reconciles these routes
+through mc-router's loopback API every five seconds; the guest needs only a
+listener on its port. It does not need the route token, Docker networks, LXD
+socket or access to the seed route file. Existing
 `<port>-<vm-name>.hanasand.com` numeric aliases remain available. TLS services
 must provide their own certificate and send SNI. Website services terminate
 wildcard HTTPS at the gateway and proxy HTTP to the configured guest port.
@@ -68,10 +72,10 @@ python3 minecraft/setup_dns.py --apply
 ```
 
 Set `VM_PORT_ROUTES_API_URL` and `VM_PORT_ROUTE_TOKEN` in the private OpenResty
-`.env`. Set the same route token in the Hanasand API environment. The VM identity
-list is read from the API on `127.0.0.1:8080` every five seconds. The mc-router
-route API is exposed only on host loopback port `25567` for OpenResty to register
-the Minecraft hostname after it reads the handshake.
+`.env`. Set the same route token in the Hanasand API environment. The VM and
+service route list is read from the API on `127.0.0.1:8080` every five seconds.
+The mc-router route API is exposed only on host loopback port `25567` for
+OpenResty to reconcile Minecraft routes from that list.
 
 `setup_dns.py` defaults to a dry run. It reads the existing Domeneshop Certbot
 credentials from `letsencrypt/domeneshop.ini`, updates only the four A and four

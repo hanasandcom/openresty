@@ -25,7 +25,7 @@ local function request(uri, method, body)
 end
 
 local function updateMcRoute(hostname, backend, currentBackend)
-    if not currentBackend then
+    if currentBackend == nil then
         local existing, getErr = request("/routes", "GET")
         if not existing or existing.status ~= 200 then return nil, getErr or (existing and existing.status) end
         local routes = json.decode(existing.body)
@@ -59,7 +59,7 @@ local function removeMcRoute(hostname)
     mcTargets:delete(hostname)
 end
 
-local function reconcileMcRoutes()
+local function reconcileMcRoutes(vmTargets, minecraftRoutes)
     local response, err = request("/routes", "GET")
     if not response or response.status ~= 200 then
         ngx.log(ngx.WARN, "Unable to inspect Minecraft routes for VM cleanup: ", err or (response and response.status))
@@ -72,16 +72,28 @@ local function reconcileMcRoutes()
     end
     for hostname, route in pairs(routes) do
         local host = type(hostname) == "string" and hostname:lower() or ""
-        if resolver.isVmHostname(host) and not staticMinecraft[host] then
-            local expected = resolver.resolve(host, 25565, targets, "minecraft-java")
+        if host ~= "" and not staticMinecraft[host] then
+            local portText, numericVmName = host:match("^(%d+)%-([a-z0-9][a-z0-9%-]*)%.hanasand%.com$")
+            local expected = minecraftRoutes[host]
+            if not expected and portText and vmTargets[numericVmName] then
+                expected = vmTargets[numericVmName] .. ":" .. portText
+            end
             local backend = type(route) == "table" and route.backend or nil
-            if not expected then
-                removeMcRoute(host)
-            elseif backend ~= expected then
+            if expected and backend ~= expected then
                 local ok, updateErr = updateMcRoute(host, expected, backend)
                 if not ok then ngx.log(ngx.WARN, "Unable to refresh VM Minecraft route ", host, ": ", updateErr) end
-            else
+            elseif expected then
                 mcTargets:set(host, expected)
+            elseif mcTargets:get(host) then
+                removeMcRoute(host)
+            end
+        end
+    end
+    for hostname, backend in pairs(minecraftRoutes) do
+        if not staticMinecraft[hostname] and not routes[hostname] then
+            local ok, updateErr = updateMcRoute(hostname, backend, false)
+            if not ok then
+                ngx.log(ngx.WARN, "Unable to create VM Minecraft route ", hostname, ": ", updateErr)
             end
         end
     end
@@ -107,6 +119,8 @@ local function refresh(premature)
     end
 
     local nextTargets = {}
+    local nextVmTargets = {}
+    local nextMinecraftRoutes = {}
     local vmNames = {}
     for _, route in ipairs(routes) do
         local vmName = type(route.vmName) == "string" and route.vmName:lower() or ""
@@ -129,6 +143,7 @@ local function refresh(premature)
                 return
             end
             nextTargets[vmName] = ip
+            nextVmTargets[vmName] = ip
         elseif route.type == "tls" or route.type == "minecraft-java" or route.type == "http" then
             local serviceName = type(route.name) == "string" and route.name:lower() or ""
             local key = resolver.serviceKey(hostname, route.type)
@@ -140,6 +155,10 @@ local function refresh(premature)
                 return
             end
             nextTargets[key] = ip .. ":" .. math.floor(port)
+            if route.type == "minecraft-java" then
+                nextMinecraftRoutes[hostname] = ip .. ":" .. math.floor(port)
+                if port == 25565 then nextMinecraftRoutes[vmName .. ".hanasand.com"] = ip .. ":25565" end
+            end
         else
             ngx.log(ngx.WARN, "VM route refresh contained an unknown route type; retaining last good map")
             return
@@ -150,7 +169,7 @@ local function refresh(premature)
     for _, vmName in ipairs(targets:get_keys(0)) do
         if not nextTargets[vmName] then targets:delete(vmName) end
     end
-    reconcileMcRoutes()
+    reconcileMcRoutes(nextVmTargets, nextMinecraftRoutes)
 end
 
 if ngx.worker.id() == 0 then

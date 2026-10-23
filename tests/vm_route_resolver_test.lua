@@ -21,6 +21,7 @@ assert(resolver.resolve(fixtureHostname, 443, targets, "tls") == nil)
 assert(resolver.resolve(fixtureHostname, 80, targets, "minecraft-java") == nil)
 assert(resolver.resolve("8080-test3.hanasand.com", 443, targets) == "10.119.85.80:8080")
 assert(resolver.resolve("test3.hanasand.com", 443, targets) == "10.119.85.80:443")
+assert(resolver.resolve("test3.hanasand.com", 25565, targets, "minecraft-java") == "10.119.85.80:25565")
 
 assert(resolver.serviceKey("a.hanasand.com", "http") == "service:http:a.hanasand.com")
 assert(resolver.serviceKey("a-.hanasand.com", "http") == nil)
