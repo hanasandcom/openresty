@@ -22,6 +22,19 @@ private `VM_PORT_ROUTE_TOKEN` in the Hanasand API and this repository's `.env`;
 the gateway reads the route list from `127.0.0.1:8080` every five seconds.
 Arbitrary plain TCP and UDP services cannot be selected by hostname alone.
 
+The route dictionaries are sized for the previously observed 71-VM inventory
+at the product limit of 1,000 published services per VM. With 40-character
+service names, the stream map is budgeted at about 256 bytes per route
+(17.4 MiB for 71,000 routes); the HTTP map stores two entries per HTTP route
+and is budgeted at about 512 bytes per route (34.7 MiB). The configured 32 MiB
+stream and 64 MiB HTTP dictionaries leave room for slab metadata and growth.
+These are host-wide upper planning figures, not a claim that 71,000 services
+are currently configured. Route refreshes use non-evicting writes. If a write
+fails, OpenResty logs the failure, attempts to roll back keys changed by that
+snapshot, and skips stale-key cleanup. Rollback is best-effort and can also
+fail, so the active map may be partially updated until a later successful
+five-second refresh.
+
 ## Deploy
 
 ```sh

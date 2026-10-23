@@ -6,6 +6,7 @@ local apiUrl = os.getenv("VM_PORT_ROUTES_API_URL") or "http://127.0.0.1:8080/api
 local syncToken = os.getenv("VM_PORT_ROUTE_TOKEN") or ""
 local mcApiUrl = os.getenv("VM_MINECRAFT_ROUTER_API_URL") or "http://127.0.0.1:25567"
 local resolver = require "vm_route_resolver"
+local routeStore = require "vm_route_store"
 
 local staticFile = io.open("/usr/local/openresty/nginx/conf/minecraft-routes-seed.json", "r")
 local staticRoutes = staticFile and json.decode(staticFile:read("*a")) or nil
@@ -33,7 +34,7 @@ local function updateMcRoute(hostname, backend, currentBackend)
         currentBackend = type(route) == "table" and route.backend or nil
     end
     if currentBackend == backend then
-        mcTargets:set(hostname, backend)
+        routeStore.safeSet(mcTargets, hostname, backend, "Minecraft cache", ngx.log)
         return true
     end
     if currentBackend then
@@ -46,7 +47,7 @@ local function updateMcRoute(hostname, backend, currentBackend)
     if not response or response.status < 200 or response.status >= 300 then
         return nil, err or (response and response.status)
     end
-    mcTargets:set(hostname, backend)
+    routeStore.safeSet(mcTargets, hostname, backend, "Minecraft cache", ngx.log)
     return true
 end
 
@@ -83,7 +84,7 @@ local function reconcileMcRoutes(vmTargets, minecraftRoutes)
                 local ok, updateErr = updateMcRoute(host, expected, backend)
                 if not ok then ngx.log(ngx.WARN, "Unable to refresh VM Minecraft route ", host, ": ", updateErr) end
             elseif expected then
-                mcTargets:set(host, expected)
+                routeStore.safeSet(mcTargets, host, expected, "Minecraft cache", ngx.log)
             elseif mcTargets:get(host) then
                 removeMcRoute(host)
             end
@@ -165,10 +166,7 @@ local function refresh(premature)
         end
     end
 
-    for vmName, ip in pairs(nextTargets) do targets:set(vmName, ip) end
-    for _, vmName in ipairs(targets:get_keys(0)) do
-        if not nextTargets[vmName] then targets:delete(vmName) end
-    end
+    if not routeStore.replace(targets, nextTargets, "stream", ngx.log) then return end
     reconcileMcRoutes(nextVmTargets, nextMinecraftRoutes)
 end
 

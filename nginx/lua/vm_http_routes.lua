@@ -2,6 +2,7 @@ local http = require "resty.http"
 local json = require "cjson.safe"
 local targets = ngx.shared.vm_http_routes
 local resolver = require "vm_route_resolver"
+local routeStore = require "vm_route_store"
 local apiUrl = os.getenv("VM_PORT_ROUTES_API_URL") or "http://127.0.0.1:8080/api/vms/internal/public-ports"
 local syncToken = os.getenv("VM_PORT_ROUTE_TOKEN") or ""
 
@@ -65,10 +66,7 @@ local function refresh(premature)
         end
     end
 
-    for vmName, ip in pairs(nextTargets) do targets:set(vmName, ip) end
-    for _, vmName in ipairs(targets:get_keys(0)) do
-        if not nextTargets[vmName] then targets:delete(vmName) end
-    end
+    routeStore.replace(targets, nextTargets, "HTTP", ngx.log)
 end
 
 if ngx.worker.id() == 0 then
