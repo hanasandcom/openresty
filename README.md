@@ -2,7 +2,7 @@
 
 Dockerized OpenResty reverse proxy for `hanasand.com` and related services.
 
-`identity.hanasand.com` routes `/api/*`, `/ready`, and the Identity sign-in page/assets directly to the Identity workers (`hanasand_auth`). Browser sign-in uses this host and does not go through the Hanasand application API.
+`identity.hanasand.com` serves Identity Next.js pages from the Identity web workers (`hanasand_identity_web`). Its `/api/*` and `/ready` paths route directly to the Fastify Identity workers (`hanasand_auth`); browser sign-in and app selection use this host and do not go through the Hanasand application API.
 
 The Sandbox page at `/sandbox` is part of Hanasand's existing Next.js frontend and uses the normal site shell. OpenResty sends the main host to that frontend through its standard route. Browser data, streams, and WebSockets use the Browser API at `https://browsers.hanasand.com/api`, sign-in calls Identity directly at `identity.hanasand.com`, and Browser records stay in the Browser-owned database. The Browser subdomain serves only the API and redirects other website paths to the standard Hanasand UI.
 
