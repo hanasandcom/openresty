@@ -24,7 +24,7 @@ while IFS= read -r path; do
         END { if (found != 1) exit 1 }
     ' "$conf") || { echo "Expected one exact location for $path." >&2; exit 1; }
     printf '%s\n' "$block" | grep -Fqx '        client_max_body_size 512k;'
-    printf '%s\n' "$block" | grep -Fqx '        limit_except POST { deny all; }'
+    printf '%s\n' "$block" | grep -Fqx '        limit_except POST OPTIONS { deny all; }'
     printf '%s\n' "$block" | grep -Fqx "        proxy_pass http://127.0.0.1:18091$path;"
     printf '%s\n' "$block" | grep -Fqx '        include snippets/proxy-headers.conf;'
     printf '%s\n' "$block" | grep -Fqx '    }'
@@ -32,13 +32,13 @@ done <<EOF
 $routes
 EOF
 
-for path in /api/ingest /api/organizations/sync /api/health; do
+for path in /api/ingest /api/organizations/sync /api/health /api/organizations; do
     test "$(grep -Fxc "    location = $path {" "$conf")" = 1
     test "$(grep -Fxc "        proxy_pass http://127.0.0.1:18091$path;" "$conf")" = 1
 done
-awk '/location = \/api\/ingest \{/,/^    \}/' "$conf" | grep -Fqx '        limit_except POST { deny all; }'
-awk '/location = \/api\/organizations\/sync \{/,/^    \}/' "$conf" | grep -Fqx '        limit_except POST { deny all; }'
-awk '/location = \/api\/health \{/,/^    \}/' "$conf" | grep -Fqx '        limit_except GET { deny all; }'
+awk '/location = \/api\/ingest \{/,/^    \}/' "$conf" | grep -Fqx '        limit_except POST OPTIONS { deny all; }'
+awk '/location = \/api\/organizations\/sync \{/,/^    \}/' "$conf" | grep -Fqx '        limit_except POST OPTIONS { deny all; }'
+awk '/location = \/api\/health \{/,/^    \}/' "$conf" | grep -Fqx '        limit_except GET OPTIONS { deny all; }'
 
 customer_routes='
 /api/logs
@@ -52,6 +52,7 @@ customer_routes='
 /api/logs/tuning/refresh
 /api/logs/errors
 /api/rules/hits
+/api/organizations
 '
 while IFS= read -r path; do
     test -n "$path" || continue
@@ -61,9 +62,9 @@ while IFS= read -r path; do
         capture && $0 == "    }" { capture = 0; exit }
         END { if (found != 1) exit 1 }
     ' "$conf") || { echo "Expected one exact customer read location for $path." >&2; exit 1; }
-    printf '%s\n' "$block" | grep -Fqx '        limit_except GET { deny all; }' || {
-        if test "$path" != /api/logs/tuning/refresh; then echo "Expected GET-only access for $path." >&2; exit 1; fi
-        printf '%s\n' "$block" | grep -Fqx '        limit_except POST { deny all; }'
+    printf '%s\n' "$block" | grep -Fqx '        limit_except GET OPTIONS { deny all; }' || {
+        if test "$path" != /api/logs/tuning/refresh; then echo "Expected GET and OPTIONS access for $path." >&2; exit 1; fi
+        printf '%s\n' "$block" | grep -Fqx '        limit_except POST OPTIONS { deny all; }'
     }
     printf '%s\n' "$block" | grep -Fqx "        proxy_pass http://127.0.0.1:18091$path;"
     printf '%s\n' "$block" | grep -Fqx '        include snippets/proxy-headers.conf;'
@@ -72,10 +73,10 @@ $customer_routes
 EOF
 
 grep -Fqx '    location ~ ^/api/rules/([^/]+)/hits$ {' "$conf"
-grep -Fqx '        limit_except GET { deny all; }' "$conf"
+grep -Fqx '        limit_except GET OPTIONS { deny all; }' "$conf"
 grep -Fqx '        proxy_pass http://127.0.0.1:18091/api/rules/$1/hits;' "$conf"
 grep -Fqx '    location ~ ^/api/rules/([^/]+)/storage-estimate$ {' "$conf"
-grep -Fqx '        limit_except GET { deny all; }' "$conf"
+grep -Fqx '        limit_except GET OPTIONS { deny all; }' "$conf"
 grep -Fqx '        proxy_pass http://127.0.0.1:18091/api/rules/$1/storage-estimate;' "$conf"
 
 grep -Fqx '    location / {' "$conf"
@@ -87,4 +88,4 @@ if grep -Eq 'location[[:space:]]+\^~?[[:space:]]+/api/migration|location[[:space
     exit 1
 fi
 
-echo 'Logs route tests passed: customer GET routes, seven exact POST-only migration paths, body limits, existing service routes, and 404 fallback.'
+echo 'Logs route tests passed: customer GET and OPTIONS routes, seven exact POST-only migration paths, body limits, existing service routes, and 404 fallback.'
