@@ -6,7 +6,7 @@ Dockerized OpenResty reverse proxy for `hanasand.com` and related services.
 
 The Sandbox page at `/sandbox` is part of Hanasand's existing Next.js frontend and uses the normal site shell. OpenResty sends the main host to that frontend through its standard route. Browser data, streams, and WebSockets use the Browser API at `https://browsers.hanasand.com/api`, sign-in calls Identity directly at `identity.hanasand.com`, and Browser records stay in the Browser-owned database. The Browser subdomain serves only the API and redirects other website paths to the standard Hanasand UI.
 
-The Scanner page calls the Scanner-owned API at `https://scanner.hanasand.com/api`. This configuration forwards `/api/` and `/health` on the Scanner host to loopback port `18200`; other paths return 404. Scanner keeps its own API and database, separate from Hanasand's API.
+The Scanner page calls the Scanner-owned API at `https://scanner.hanasand.com/api`. This configuration strips the `/api/` prefix and forwards requests, plus `/health`, on the Scanner host to loopback port `18200`; other paths return 404. Scanner keeps its own API and database, separate from Hanasand's API.
 
 Shared HTTP error responses use the template in `nginx/errors/` and its Lua renderer in `nginx/lua/`.
 
