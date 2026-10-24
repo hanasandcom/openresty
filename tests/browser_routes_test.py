@@ -19,7 +19,7 @@ def server_for(name: str, exact_names: str | None = None) -> str:
 class BrowserRoutesTest(unittest.TestCase):
     def test_main_host_uses_normal_frontend_route_for_sandbox(self):
         main = server_for("hanasand.com", "hanasand.com www.hanasand.com")
-        self.assertIn("proxy_pass http://localhost:3000;", main)
+        self.assertIn("proxy_pass http://hanasand_frontend;", main)
         self.assertNotRegex(main, r"location\s+(?:=\s*)?/(?:sandbox|api/browser)(?:/|\s|\{)")
 
     def test_browser_host_keeps_api_and_redirects_website_paths_to_443(self):
@@ -33,6 +33,11 @@ class BrowserRoutesTest(unittest.TestCase):
 
     def test_api_has_no_extra_public_hostname(self):
         self.assertFalse(any("api.browsers.hanasand.com" in block for block in SERVER_BLOCKS))
+
+    def test_scanner_api_host_routes_to_its_own_loopback_service(self):
+        scanner = server_for("scanner.hanasand.com", "scanner.hanasand.com")
+        self.assertIn("proxy_pass http://127.0.0.1:18200;", scanner)
+        self.assertNotIn("return 301 https://hanasand.com", scanner)
 
 
 if __name__ == "__main__":
