@@ -37,7 +37,7 @@ class BrowserRoutesTest(unittest.TestCase):
     def test_scanner_api_host_routes_to_its_own_loopback_service(self):
         scanner = server_for("scanner.hanasand.com", "scanner.hanasand.com")
         self.assertIn("location ^~ /api/ {", scanner)
-        self.assertIn("proxy_pass http://127.0.0.1:18200/;", scanner)
+        self.assertIn("proxy_pass http://127.0.0.1:18200;", scanner)
         self.assertIn("location = /health {", scanner)
         self.assertNotIn("return 301 https://hanasand.com", scanner)
 
