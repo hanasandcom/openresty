@@ -74,6 +74,9 @@ EOF
 grep -Fqx '    location ~ ^/api/rules/([^/]+)/hits$ {' "$conf"
 grep -Fqx '        limit_except GET { deny all; }' "$conf"
 grep -Fqx '        proxy_pass http://127.0.0.1:18091/api/rules/$1/hits;' "$conf"
+grep -Fqx '    location ~ ^/api/rules/([^/]+)/storage-estimate$ {' "$conf"
+grep -Fqx '        limit_except GET { deny all; }' "$conf"
+grep -Fqx '        proxy_pass http://127.0.0.1:18091/api/rules/$1/storage-estimate;' "$conf"
 
 grep -Fqx '    location / {' "$conf"
 grep -Fqx '        return 404;' "$conf"
