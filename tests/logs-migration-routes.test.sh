@@ -25,7 +25,7 @@ while IFS= read -r path; do
     ' "$conf") || { echo "Expected one exact location for $path." >&2; exit 1; }
     printf '%s\n' "$block" | grep -Fqx '        client_max_body_size 512k;'
     printf '%s\n' "$block" | grep -Fqx '        limit_except POST { deny all; }'
-    printf '%s\n' "$block" | grep -Fqx "        proxy_pass http://127.0.0.1:18090$path;"
+    printf '%s\n' "$block" | grep -Fqx "        proxy_pass http://127.0.0.1:18091$path;"
     printf '%s\n' "$block" | grep -Fqx '        include snippets/proxy-headers.conf;'
     printf '%s\n' "$block" | grep -Fqx '    }'
 done <<EOF
@@ -34,7 +34,7 @@ EOF
 
 for path in /api/ingest /api/organizations/sync /api/health; do
     test "$(grep -Fxc "    location = $path {" "$conf")" = 1
-    test "$(grep -Fxc "        proxy_pass http://127.0.0.1:18090$path;" "$conf")" = 1
+    test "$(grep -Fxc "        proxy_pass http://127.0.0.1:18091$path;" "$conf")" = 1
 done
 awk '/location = \/api\/ingest \{/,/^    \}/' "$conf" | grep -Fqx '        limit_except POST { deny all; }'
 awk '/location = \/api\/organizations\/sync \{/,/^    \}/' "$conf" | grep -Fqx '        limit_except POST { deny all; }'
@@ -65,7 +65,7 @@ while IFS= read -r path; do
         if test "$path" != /api/logs/tuning/refresh; then echo "Expected GET-only access for $path." >&2; exit 1; fi
         printf '%s\n' "$block" | grep -Fqx '        limit_except POST { deny all; }'
     }
-    printf '%s\n' "$block" | grep -Fqx "        proxy_pass http://127.0.0.1:18090$path;"
+    printf '%s\n' "$block" | grep -Fqx "        proxy_pass http://127.0.0.1:18091$path;"
     printf '%s\n' "$block" | grep -Fqx '        include snippets/proxy-headers.conf;'
 done <<EOF
 $customer_routes
@@ -73,7 +73,7 @@ EOF
 
 grep -Fqx '    location ~ ^/api/rules/([^/]+)/hits$ {' "$conf"
 grep -Fqx '        limit_except GET { deny all; }' "$conf"
-grep -Fqx '        proxy_pass http://127.0.0.1:18090/api/rules/$1/hits;' "$conf"
+grep -Fqx '        proxy_pass http://127.0.0.1:18091/api/rules/$1/hits;' "$conf"
 
 grep -Fqx '    location / {' "$conf"
 grep -Fqx '        return 404;' "$conf"
