@@ -36,6 +36,44 @@ for path in /api/ingest /api/organizations/sync /api/health; do
     test "$(grep -Fxc "    location = $path {" "$conf")" = 1
     test "$(grep -Fxc "        proxy_pass http://127.0.0.1:18090$path;" "$conf")" = 1
 done
+awk '/location = \/api\/ingest \{/,/^    \}/' "$conf" | grep -Fqx '        limit_except POST { deny all; }'
+awk '/location = \/api\/organizations\/sync \{/,/^    \}/' "$conf" | grep -Fqx '        limit_except POST { deny all; }'
+awk '/location = \/api\/health \{/,/^    \}/' "$conf" | grep -Fqx '        limit_except GET { deny all; }'
+
+customer_routes='
+/api/logs
+/api/logs/search
+/api/logs/realtime
+/api/logs/services
+/api/logs/services/summary
+/api/logs/metrics
+/api/logs/metrics/public
+/api/logs/tuning
+/api/logs/tuning/refresh
+/api/logs/errors
+/api/rules/hits
+'
+while IFS= read -r path; do
+    test -n "$path" || continue
+    block=$(awk -v path="$path" '
+        $0 == "    location = " path " {" { capture = 1; found++ }
+        capture { print }
+        capture && $0 == "    }" { capture = 0; exit }
+        END { if (found != 1) exit 1 }
+    ' "$conf") || { echo "Expected one exact customer read location for $path." >&2; exit 1; }
+    printf '%s\n' "$block" | grep -Fqx '        limit_except GET { deny all; }' || {
+        if test "$path" != /api/logs/tuning/refresh; then echo "Expected GET-only access for $path." >&2; exit 1; fi
+        printf '%s\n' "$block" | grep -Fqx '        limit_except POST { deny all; }'
+    }
+    printf '%s\n' "$block" | grep -Fqx "        proxy_pass http://127.0.0.1:18090$path;"
+    printf '%s\n' "$block" | grep -Fqx '        include snippets/proxy-headers.conf;'
+done <<EOF
+$customer_routes
+EOF
+
+grep -Fqx '    location ~ ^/api/rules/([^/]+)/hits$ {' "$conf"
+grep -Fqx '        limit_except GET { deny all; }' "$conf"
+grep -Fqx '        proxy_pass http://127.0.0.1:18090/api/rules/$1/hits;' "$conf"
 
 grep -Fqx '    location / {' "$conf"
 grep -Fqx '        return 404;' "$conf"
@@ -46,4 +84,4 @@ if grep -Eq 'location[[:space:]]+\^~?[[:space:]]+/api/migration|location[[:space
     exit 1
 fi
 
-echo 'Logs migration route tests passed: seven exact POST-only migration paths, 512k body limit, existing service routes, and 404 fallback.'
+echo 'Logs route tests passed: customer GET routes, seven exact POST-only migration paths, body limits, existing service routes, and 404 fallback.'
