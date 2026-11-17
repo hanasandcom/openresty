@@ -267,7 +267,10 @@
             const title = renderedStatus ? rendered.title : fallbackTitle;
             const message = renderedStatus ? rendered.message : fallbackMessage.replace('{domain}', domain);
             const retryable = renderedStatus ? rendered.retryable : [408, 429, 500, 502, 503, 504].includes(code);
-            const retries = Math.min(Number(params.get('retries')) || 0, maxRetries);
+            const requestedRetries = Number(params.get('retries'));
+            const retries = Number.isFinite(requestedRetries)
+                ? Math.max(0, Math.min(Math.floor(requestedRetries), maxRetries))
+                : 0;
             const homeLink = document.getElementById('home-link');
             const retryLink = document.getElementById('retry-link');
             const retryMessage = document.getElementById('retry-message');
@@ -286,8 +289,20 @@
 
             if (retryable && retries < maxRetries) {
                 const delaySeconds = retryBaseSeconds * Math.pow(2, retries);
-                retryMessage.textContent = `Retrying in ${delaySeconds}s. Attempt ${retries + 1} of ${maxRetries}.`;
-                window.setTimeout(() => window.location.assign(retryLink.href), delaySeconds * 1000);
+                const retryAt = Date.now() + delaySeconds * 1000;
+                const updateCountdown = () => {
+                    // Use elapsed time so a throttled or suspended tab catches up.
+                    const secondsLeft = Math.max(0, Math.ceil((retryAt - Date.now()) / 1000));
+                    if (secondsLeft === 0) {
+                        window.clearInterval(countdown);
+                        retryMessage.textContent = 'Retrying now…';
+                        window.location.assign(retryLink.href);
+                        return;
+                    }
+                    retryMessage.textContent = `Retrying in ${secondsLeft}s. Attempt ${retries + 1} of ${maxRetries}.`;
+                };
+                const countdown = window.setInterval(updateCountdown, 1000);
+                updateCountdown();
             } else if (retryable) {
                 retryMessage.textContent = 'Automatic retries stopped. Try again later.';
             } else {

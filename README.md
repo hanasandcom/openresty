@@ -10,7 +10,7 @@ The Sandbox page at `/sandbox` is part of Hanasand's existing Next.js frontend a
 
 The Scanner page calls the Scanner-owned API at `https://scanner.hanasand.com/api`. OpenResty preserves the `/api/` prefix when forwarding requests to loopback port `18200`; `/health` is also forwarded on the Scanner host, and other paths return 404. Scanner keeps its own API and database, separate from Hanasand's API.
 
-Shared HTTP error responses use the template in `nginx/errors/` and its Lua renderer in `nginx/lua/`.
+Shared HTTP error responses use the template in `nginx/errors/` and its Lua renderer in `nginx/lua/`. Retryable errors show a live countdown and retry up to five times, after 5, 10, 20, 40, and 80 seconds. The countdown uses elapsed time so it catches up when a paused tab resumes. Run `node --test tests/error-countdown.test.mjs` to check retry timing and limits.
 
 The service uses host networking so the existing upstreams such as `localhost:3000`, `localhost:8080`, and `localhost:8501` keep the same meaning they had in the host-level OpenResty service. Its shared port 443 listener routes TLS by SNI, `SSH-` greetings to the VM SSH gateway, HTTP signaling to Name Pending, and Minecraft Java by the hostname in its handshake. VM services route to the selected guest port on the VM's private address. The API feed supplies VM identities and published service metadata; OpenResty keeps route maps in shared memory and updates mc-router through its loopback API. The VM guest does not need access to the route token, Docker networks, LXD socket, or Minecraft seed route file. The internal SSH relay consumes the PROXY header before forwarding the SSH stream to the gateway on port 22.
 
