@@ -14,6 +14,24 @@ Shared HTTP error responses use the template in `nginx/errors/` and its Lua rend
 
 The service uses host networking so the existing upstreams such as `localhost:3000`, `localhost:8080`, and `localhost:8501` keep the same meaning they had in the host-level OpenResty service. Its shared port 443 listener routes TLS by SNI, `SSH-` greetings to the VM SSH gateway, HTTP signaling to Name Pending, and Minecraft Java by the hostname in its handshake. VM services route to the selected guest port on the VM's private address. The API feed supplies VM identities and published service metadata; OpenResty keeps route maps in shared memory and updates mc-router through its loopback API. The VM guest does not need access to the route token, Docker networks, LXD socket, or Minecraft seed route file. The internal SSH relay consumes the PROXY header before forwarding the SSH stream to the gateway on port 22.
 
+Git SSH also shares port 443. Clients wrap SSH in verified TLS with SNI
+`git.hanasand.com` and ALPN `hanasand-git-ssh/1`; the stream listener terminates
+that TLS on loopback and forwards SSH to Forgejo on `127.0.0.1:2222`. Raw SSH
+on port 443 remains reserved for the VM gateway. A client can use this OpenSSH
+entry, then keep ordinary `ssh://git@git.hanasand.com/...` remotes:
+
+```sshconfig
+Host git.hanasand.com
+    User git
+    Port 443
+    HostKeyAlias forgejo-git-443
+    ProxyCommand openssl s_client -quiet -connect %h:443 -servername %h -alpn hanasand-git-ssh/1 -verify_return_error -verify_hostname %h
+```
+
+Pin Forgejo's SSH host key under the `forgejo-git-443` alias after checking it
+against `/data/ssh/ssh_host_ed25519_key.pub` in `git_ui`. The Git SSH key differs
+from the host's VM gateway key.
+
 VM names provide their public hostname (`<vm-name>.hanasand.com`). Owners can
 also publish a typed service hostname (`<service-name>.hanasand.com`) in the
 Hanasand VM details page. HTTP routes terminate TLS at the wildcard HTTPS
