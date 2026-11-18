@@ -38,6 +38,20 @@ function M.validServiceName(name)
         and not name:match("^%d+%-[a-z0-9%-]+$")
 end
 
+function M.validGamePortRoute(route, vmNames)
+    if type(route) ~= "table" or (route.type ~= "tcp" and route.type ~= "udp") then return false end
+    local name = route.name
+    local vmName = route.vmName
+    local publicPort = route.publicPort
+    return M.validServiceName(name)
+        and route.hostname == name .. ".hanasand.com"
+        and not (vmNames and vmNames[name])
+        and type(vmName) == "string" and vmName:match("^[a-z0-9][a-z0-9%-]*$") ~= nil
+        and validIp(route.vmIp) and M.validPort(route.port)
+        and type(publicPort) == "number" and publicPort >= 32000 and publicPort <= 45000
+        and publicPort % 1 == 0
+end
+
 function M.serviceKey(hostname, routeType)
     if type(hostname) ~= "string" then return nil end
     local host = hostname:lower():gsub("%.$", "")

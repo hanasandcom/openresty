@@ -32,4 +32,16 @@ assert(resolver.validPort(443))
 assert(not resolver.validPort(65536))
 assert(not resolver.validIp("256.119.85.80"))
 
+local gameRoute = {
+    name = "arena", hostname = "arena.hanasand.com", type = "udp",
+    vmName = "test3", vmIp = "10.119.85.80", port = 27015, publicPort = 32000,
+}
+assert(resolver.validGamePortRoute(gameRoute, { test3 = true }))
+assert(not resolver.validGamePortRoute(gameRoute, { arena = true }))
+gameRoute.publicPort = 45001
+assert(not resolver.validGamePortRoute(gameRoute, {}))
+gameRoute.publicPort = 32000
+gameRoute.type = "unknown"
+assert(not resolver.validGamePortRoute(gameRoute, {}))
+
 print("VM public-service route contract passed")

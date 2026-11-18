@@ -60,6 +60,11 @@ local function refresh(premature)
                 nextTargets[key] = backend
                 nextTargets[hostname] = "http://" .. backend
             end
+        elseif route.type == "tcp" or route.type == "udp" then
+            if not resolver.validGamePortRoute(route, vmNames) then
+                ngx.log(ngx.WARN, "VM route refresh contained an invalid game port; retaining last good HTTP map")
+                return
+            end
         else
             ngx.log(ngx.WARN, "VM route refresh contained an unknown route type; retaining last good HTTP map")
             return
