@@ -2,6 +2,16 @@
 
 Dockerized OpenResty reverse proxy for `hanasand.com` and related services.
 
+The Docker build uses OpenResty 1.31.8.1 with the upstream Nginx source changes
+from 1.31.8 to 1.31.9 applied to its bundled Nginx. OpenResty has not yet
+released a build containing the November 2026 Nginx security fixes. The patch
+at `nginx/patches/nginx-1.31.9-security.patch` is the diff between the official
+Nginx 1.31.8 and 1.31.9 `src` trees, excluding `nginx.h` (whose version macros
+are updated in the Dockerfile). The build pins the OpenResty tarball SHA-256 and
+requires the patch to apply without fuzz. Replace this backport with an
+official fixed OpenResty release once one is available; verify the bundled
+Nginx version before removing it.
+
 `identity.hanasand.com` serves Identity Next.js pages from the Identity web workers (`hanasand_identity_web`). Its `/api/*` and `/ready` paths route directly to the Fastify Identity workers (`hanasand_auth`); browser sign-in and app selection use this host and do not go through the Hanasand application API.
 
 `ti.hanasand.com` serves the standalone Threat Intelligence web application and public API through the host reverse proxy at `127.0.0.1:18080`.
