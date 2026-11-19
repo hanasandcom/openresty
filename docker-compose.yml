@@ -22,7 +22,7 @@ services:
       - ${LETSENCRYPT_HOST_DIR:-./letsencrypt}:/etc/letsencrypt
       - ${CERTBOT_CREDENTIALS_HOST_DIR:-./certbot-credentials}:/etc/certbot-credentials:ro
       - ./scripts:/usr/local/openresty/certbot-scripts:ro
-    mem_limit: 512m
+    mem_limit: ${OPENRESTY_MEMORY_LIMIT:-512m}
     cpus: "1.0"
     healthcheck:
       test: ["CMD", "/usr/local/openresty/bin/openresty", "-t"]

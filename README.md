@@ -89,10 +89,13 @@ the requested hostname. OVH has no local application frontend or API ports.
 Requests sent directly to `128.39.142.218` redirect to the canonical Hanasand URL
 while preserving the path and query. HTTPS uses a separate Let's Encrypt IP
 certificate because the domain certificate does not identify the numeric address.
-IP certificates use the `shortlived` profile and expire after six days. Certbot
-must renew them automatically; the Inspur renewal job runs twice daily and reloads
-OpenResty after a successful renewal. The HTTP-01 challenge path remains available
-on port 80 for renewal.
+IP certificates use the `shortlived` profile and expire after six days. Inspur's
+certificate renewal job runs twice daily for the IP certificate and both domain
+certificates. It reloads OpenResty after a successful renewal and copies domain
+certificates to OVH. OVH runs the same domain renewal job at different times and
+copies successful renewals back to Inspur. See the operations repository's
+`scripts/certificates/README.md` for the commands and private host configuration.
+The HTTP-01 challenge path remains available on port 80 on both hosts.
 
 To issue or replace the IP certificate from the OpenResty container, use:
 
@@ -102,5 +105,5 @@ docker exec openresty certbot certonly --preferred-profile shortlived \
   --ip-address 128.39.142.218
 ```
 
-The renewal configuration created by Certbot is picked up by
-`renew-hanasand-certbot.sh`; verify that the scheduled renewal job remains enabled.
+The renewal configuration created by Certbot is picked up by the operations
+repository's `cert-sync.py` job for `128.39.142.218`.
