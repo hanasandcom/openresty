@@ -82,8 +82,9 @@ On a host that keeps certificates outside this checkout, set
 `.env` so the container mounts the existing certificate archive and DNS
 credential directory. For example, OVH uses `/etc/letsencrypt` for both.
 OVH also sets `COMPOSE_FILE=docker-compose.yml:docker-compose.ovh.yml`; the
-override supplies the domain certificate to the default TLS listener that
-otherwise expects Inspur's IP certificate. OVH does not serve that IP.
+override uses `nginx-ovh.conf` to relay HTTP(S) to the existing encrypted
+`127.0.0.1:18443` tunnel. The upstream TLS certificate is verified against
+the requested hostname. OVH has no local application frontend or API ports.
 
 Requests sent directly to `128.39.142.218` redirect to the canonical Hanasand URL
 while preserving the path and query. HTTPS uses a separate Let's Encrypt IP
