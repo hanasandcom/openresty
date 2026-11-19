@@ -81,6 +81,9 @@ On a host that keeps certificates outside this checkout, set
 `LETSENCRYPT_HOST_DIR` and `CERTBOT_CREDENTIALS_HOST_DIR` in the checkout's
 `.env` so the container mounts the existing certificate archive and DNS
 credential directory. For example, OVH uses `/etc/letsencrypt` for both.
+OVH also sets `COMPOSE_FILE=docker-compose.yml:docker-compose.ovh.yml`; the
+override supplies the domain certificate to the default TLS listener that
+otherwise expects Inspur's IP certificate. OVH does not serve that IP.
 
 Requests sent directly to `128.39.142.218` redirect to the canonical Hanasand URL
 while preserving the path and query. HTTPS uses a separate Let's Encrypt IP

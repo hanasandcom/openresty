@@ -1,0 +1,6 @@
+# OVH does not serve Inspur's numeric IP. Its default TLS listener still needs
+# a readable certificate at startup; use the existing Hanasand certificate.
+services:
+  openresty:
+    volumes:
+      - /etc/letsencrypt/live/hanasand.com:/etc/letsencrypt/live/128.39.142.218:ro
