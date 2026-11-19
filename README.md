@@ -76,7 +76,11 @@ curl -I https://hanasand.com
 curl -fsS https://identity.hanasand.com/ready
 ```
 
-TLS certificates are read from `/etc/letsencrypt` on the host.
+TLS certificates are read from `/etc/letsencrypt` in the container.
+On a host that keeps certificates outside this checkout, set
+`LETSENCRYPT_HOST_DIR` and `CERTBOT_CREDENTIALS_HOST_DIR` in the checkout's
+`.env` so the container mounts the existing certificate archive and DNS
+credential directory. For example, OVH uses `/etc/letsencrypt` for both.
 
 Requests sent directly to `128.39.142.218` redirect to the canonical Hanasand URL
 while preserving the path and query. HTTPS uses a separate Let's Encrypt IP

@@ -19,8 +19,8 @@ services:
       - ./nginx/snippets:/usr/local/openresty/nginx/conf/snippets:ro
       - ./nginx/errors:/usr/local/openresty/nginx/errors:ro
       - ./nginx/lua:/usr/local/openresty/nginx/lua:ro
-      - ./letsencrypt:/etc/letsencrypt
-      - ./certbot-credentials:/etc/certbot-credentials:ro
+      - ${LETSENCRYPT_HOST_DIR:-./letsencrypt}:/etc/letsencrypt
+      - ${CERTBOT_CREDENTIALS_HOST_DIR:-./certbot-credentials}:/etc/certbot-credentials:ro
       - ./scripts:/usr/local/openresty/certbot-scripts:ro
     mem_limit: 512m
     cpus: "1.0"
